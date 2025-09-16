@@ -162,10 +162,15 @@ func (r *ecommerceRepository) GetCustomers(baseUrl, apiKey string) ([]domain.Cus
 		return nil, err
 	}
 
-	var customers []domain.Customer
-	if err := json.Unmarshal(respBody, &customers); err != nil {
+	type CustomersResponse struct {
+		Customers []domain.Customer `json:"customers"`
+	}
+
+	var resp CustomersResponse
+	if err := json.Unmarshal(respBody, &resp); err != nil {
 		return nil, fmt.Errorf("error decoding response: %w", err)
 	}
+	customers := resp.Customers
 
 	return customers, nil
 }
