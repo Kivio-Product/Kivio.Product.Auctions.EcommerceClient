@@ -20,6 +20,8 @@ type EcommerceRepository interface {
 	GetApiKey(username, password, tokenUrl string) (string, error)
 	UpdateItemStock(baseUrl, apiKey, itemId string, newStock int64) error
 	GetAllItemsRaw(baseUrl, apiKey string) ([]byte, error)
+	CreateCustomer(baseUrl, apiKey string, customerData []byte) ([]byte, error)
+	CreateOrder(baseUrl, apiKey string, orderData []byte) ([]byte, error)
 }
 
 type ecommerceRepository struct {
@@ -218,4 +220,12 @@ func (r *ecommerceRepository) UpdateItemStock(baseUrl, apiKey, itemId string, ne
 
 func (r *ecommerceRepository) GetAllItemsRaw(baseUrl, apiKey string) ([]byte, error) {
 	return r.client.GetAllItems(baseUrl, apiKey)
+}
+
+func (r *ecommerceRepository) CreateCustomer(baseUrl, apiKey string, customerData []byte) ([]byte, error) {
+	return r.client.CreateCustomer(baseUrl, apiKey, customerData)
+}
+
+func (r *ecommerceRepository) CreateOrder(baseUrl, apiKey string, orderData []byte) ([]byte, error) {
+	return r.client.CreateOrder(baseUrl, apiKey, orderData)
 }

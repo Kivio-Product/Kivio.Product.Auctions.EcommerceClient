@@ -16,6 +16,8 @@ type EcommerceClient interface {
 	GetCustomers(baseUrl, apiKey string) ([]byte, error)
 	GetCustomerByID(baseUrl, apiKey, id string) ([]byte, error)
 	GetAllItems(baseUrl, apiKey string) ([]byte, error)
+	CreateCustomer(baseUrl, apiKey string, customerData []byte) ([]byte, error)
+	CreateOrder(baseUrl, apiKey string, orderData []byte) ([]byte, error)
 }
 
 type ecommerceClient struct {
@@ -195,6 +197,54 @@ func (c *ecommerceClient) GetAllItems(baseUrl, apiKey string) ([]byte, error) {
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("failed to get all items, status code: %d", resp.StatusCode)
+	}
+
+	return ioutil.ReadAll(resp.Body)
+}
+
+func (c *ecommerceClient) CreateCustomer(baseUrl, apiKey string, customerData []byte) ([]byte, error) {
+	url := fmt.Sprintf("%s/api/customers", baseUrl)
+
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(customerData))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", apiKey))
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to send request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
+		return nil, fmt.Errorf("failed to create customer, status code: %d", resp.StatusCode)
+	}
+
+	return ioutil.ReadAll(resp.Body)
+}
+
+func (c *ecommerceClient) CreateOrder(baseUrl, apiKey string, orderData []byte) ([]byte, error) {
+	url := fmt.Sprintf("%s/api/orders", baseUrl)
+
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(orderData))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", apiKey))
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to send request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
+		return nil, fmt.Errorf("failed to create order, status code: %d", resp.StatusCode)
 	}
 
 	return ioutil.ReadAll(resp.Body)

@@ -18,6 +18,8 @@ type EcommerceService interface {
 	GetApiKey(ctx context.Context, username, password, tokenUrl string) (string, error)
 	UpdateItemStock(ctx context.Context, apiUrl, apiKey, itemId string, newStock int) error
 	GetAllItemsRaw(ctx context.Context, apiUrl, apiKey string) ([]byte, error)
+	CreateEcommerceCustomer(ctx context.Context, apiUrl, apiKey string, customerData []byte) ([]byte, error)
+	CreateEcommerceOrder(ctx context.Context, apiUrl, apiKey string, orderData []byte) ([]byte, error)
 }
 
 type ecommerceService struct {
@@ -65,4 +67,28 @@ func (s *ecommerceService) UpdateItemStock(ctx context.Context, apiUrl, apiKey, 
 
 func (s *ecommerceService) GetAllItemsRaw(ctx context.Context, apiUrl, apiKey string) ([]byte, error) {
 	return s.repo.GetAllItemsRaw(apiUrl, apiKey)
+}
+
+func (s *ecommerceService) CreateEcommerceCustomer(ctx context.Context, apiUrl, apiKey string, customerData []byte) ([]byte, error) {
+	fmt.Printf("Creating customer in ecommerce with data: %s\n", string(customerData))
+
+	respBody, err := s.repo.CreateCustomer(apiUrl, apiKey, customerData)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create customer: %w", err)
+	}
+
+	fmt.Printf("Customer creation response: %s\n", string(respBody))
+	return respBody, nil
+}
+
+func (s *ecommerceService) CreateEcommerceOrder(ctx context.Context, apiUrl, apiKey string, orderData []byte) ([]byte, error) {
+	fmt.Printf("Creating order in ecommerce with data: %s\n", string(orderData))
+
+	respBody, err := s.repo.CreateOrder(apiUrl, apiKey, orderData)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create order: %w", err)
+	}
+
+	fmt.Printf("Order creation response: %s\n", string(respBody))
+	return respBody, nil
 }
