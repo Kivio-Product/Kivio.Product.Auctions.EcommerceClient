@@ -204,9 +204,11 @@ func (c *ecommerceClient) GetAllItems(baseUrl, apiKey string) ([]byte, error) {
 
 func (c *ecommerceClient) CreateCustomer(baseUrl, apiKey string, customerData []byte) ([]byte, error) {
 	url := fmt.Sprintf("%s/api/customers", baseUrl)
+	fmt.Printf("[HTTP] POST %s\n", url)
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(customerData))
 	if err != nil {
+		fmt.Printf("[HTTP] ERROR: Failed to create request: %v\n", err)
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
 
@@ -215,11 +217,15 @@ func (c *ecommerceClient) CreateCustomer(baseUrl, apiKey string, customerData []
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
+		fmt.Printf("[HTTP] ERROR: Failed to send request: %v\n", err)
 		return nil, fmt.Errorf("failed to send request: %w", err)
 	}
 	defer resp.Body.Close()
 
+	fmt.Printf("[HTTP] Response Status: %d\n", resp.StatusCode)
+
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
+		fmt.Printf("[HTTP] ERROR: Unexpected status code: %d\n", resp.StatusCode)
 		return nil, fmt.Errorf("failed to create customer, status code: %d", resp.StatusCode)
 	}
 
@@ -228,9 +234,11 @@ func (c *ecommerceClient) CreateCustomer(baseUrl, apiKey string, customerData []
 
 func (c *ecommerceClient) CreateOrder(baseUrl, apiKey string, orderData []byte) ([]byte, error) {
 	url := fmt.Sprintf("%s/api/orders", baseUrl)
+	fmt.Printf("[HTTP] POST %s\n", url)
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(orderData))
 	if err != nil {
+		fmt.Printf("[HTTP] ERROR: Failed to create request: %v\n", err)
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
 
@@ -239,11 +247,15 @@ func (c *ecommerceClient) CreateOrder(baseUrl, apiKey string, orderData []byte) 
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
+		fmt.Printf("[HTTP] ERROR: Failed to send request: %v\n", err)
 		return nil, fmt.Errorf("failed to send request: %w", err)
 	}
 	defer resp.Body.Close()
 
+	fmt.Printf("[HTTP] Response Status: %d\n", resp.StatusCode)
+
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
+		fmt.Printf("[HTTP] ERROR: Unexpected status code: %d\n", resp.StatusCode)
 		return nil, fmt.Errorf("failed to create order, status code: %d", resp.StatusCode)
 	}
 
