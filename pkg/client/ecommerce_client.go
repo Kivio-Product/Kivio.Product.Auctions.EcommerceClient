@@ -132,7 +132,7 @@ func (c *ecommerceClient) GetItemByID(baseUrl, apiKey, itemId string) ([]byte, e
 }
 
 func (c *ecommerceClient) GetCustomers(baseUrl, apiKey string) ([]byte, error) {
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s/customers", baseUrl), nil)
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/api/customers", baseUrl), nil)
 	if err != nil {
 		return nil, fmt.Errorf("error creating request: %w", err)
 	}
