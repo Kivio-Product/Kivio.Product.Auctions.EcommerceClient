@@ -17,6 +17,7 @@ type EcommerceClient interface {
 	GetCustomerByID(baseUrl, apiKey, id string) ([]byte, error)
 	GetAllItems(baseUrl, apiKey string) ([]byte, error)
 	CreateCustomer(baseUrl, apiKey string, customerData []byte) ([]byte, error)
+	CreateBillingAddress(baseUrl, apiKey string, customerID int, addressData []byte) ([]byte, error)
 	CreateOrder(baseUrl, apiKey string, orderData []byte) ([]byte, error)
 }
 
@@ -227,6 +228,36 @@ func (c *ecommerceClient) CreateCustomer(baseUrl, apiKey string, customerData []
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
 		fmt.Printf("[HTTP] ERROR: Unexpected status code: %d\n", resp.StatusCode)
 		return nil, fmt.Errorf("failed to create customer, status code: %d", resp.StatusCode)
+	}
+
+	return ioutil.ReadAll(resp.Body)
+}
+
+func (c *ecommerceClient) CreateBillingAddress(baseUrl, apiKey string, customerID int, addressData []byte) ([]byte, error) {
+	url := fmt.Sprintf("%s/api/customers/%d/billingaddress", baseUrl, customerID)
+	fmt.Printf("[HTTP] POST %s\n", url)
+
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(addressData))
+	if err != nil {
+		fmt.Printf("[HTTP] ERROR: Failed to create request: %v\n", err)
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", apiKey))
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		fmt.Printf("[HTTP] ERROR: Failed to send request: %v\n", err)
+		return nil, fmt.Errorf("failed to send request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	fmt.Printf("[HTTP] Response Status: %d\n", resp.StatusCode)
+
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
+		fmt.Printf("[HTTP] ERROR: Unexpected status code: %d\n", resp.StatusCode)
+		return nil, fmt.Errorf("failed to create billing address, status code: %d", resp.StatusCode)
 	}
 
 	return ioutil.ReadAll(resp.Body)

@@ -21,6 +21,7 @@ type EcommerceRepository interface {
 	UpdateItemStock(baseUrl, apiKey, itemId string, newStock int64) error
 	GetAllItemsRaw(baseUrl, apiKey string) ([]byte, error)
 	CreateCustomer(baseUrl, apiKey string, customerData []byte) ([]byte, error)
+	CreateBillingAddress(baseUrl, apiKey string, customerID int, addressData []byte) ([]byte, error)
 	CreateOrder(baseUrl, apiKey string, orderData []byte) ([]byte, error)
 }
 
@@ -229,6 +230,10 @@ func (r *ecommerceRepository) GetAllItemsRaw(baseUrl, apiKey string) ([]byte, er
 
 func (r *ecommerceRepository) CreateCustomer(baseUrl, apiKey string, customerData []byte) ([]byte, error) {
 	return r.client.CreateCustomer(baseUrl, apiKey, customerData)
+}
+
+func (r *ecommerceRepository) CreateBillingAddress(baseUrl, apiKey string, customerID int, addressData []byte) ([]byte, error) {
+	return r.client.CreateBillingAddress(baseUrl, apiKey, customerID, addressData)
 }
 
 func (r *ecommerceRepository) CreateOrder(baseUrl, apiKey string, orderData []byte) ([]byte, error) {
