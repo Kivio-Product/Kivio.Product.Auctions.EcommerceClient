@@ -22,6 +22,7 @@ type EcommerceRepository interface {
 	GetAllItemsRaw(baseUrl, apiKey string) ([]byte, error)
 	CreateCustomer(baseUrl, apiKey string, customerData []byte) ([]byte, error)
 	CreateBillingAddress(baseUrl, apiKey string, customerID int, addressData []byte) ([]byte, error)
+	CreateShippingAddress(baseUrl, apiKey string, customerID int, addressData []byte) ([]byte, error)
 	CreateOrder(baseUrl, apiKey string, orderData []byte) ([]byte, error)
 }
 
@@ -234,6 +235,10 @@ func (r *ecommerceRepository) CreateCustomer(baseUrl, apiKey string, customerDat
 
 func (r *ecommerceRepository) CreateBillingAddress(baseUrl, apiKey string, customerID int, addressData []byte) ([]byte, error) {
 	return r.client.CreateBillingAddress(baseUrl, apiKey, customerID, addressData)
+}
+
+func (r *ecommerceRepository) CreateShippingAddress(baseUrl, apiKey string, customerID int, addressData []byte) ([]byte, error) {
+	return r.client.CreateShippingAddress(baseUrl, apiKey, customerID, addressData)
 }
 
 func (r *ecommerceRepository) CreateOrder(baseUrl, apiKey string, orderData []byte) ([]byte, error) {

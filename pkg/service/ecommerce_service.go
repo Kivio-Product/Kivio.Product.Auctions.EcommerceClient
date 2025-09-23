@@ -20,6 +20,7 @@ type EcommerceService interface {
 	GetAllItemsRaw(ctx context.Context, apiUrl, apiKey string) ([]byte, error)
 	CreateEcommerceCustomer(ctx context.Context, apiUrl, apiKey string, customerData []byte) ([]byte, error)
 	CreateEcommerceBillingAddress(ctx context.Context, apiUrl, apiKey string, customerID int, addressData []byte) ([]byte, error)
+	CreateEcommerceShippingAddress(ctx context.Context, apiUrl, apiKey string, customerID int, addressData []byte) ([]byte, error)
 	CreateEcommerceOrder(ctx context.Context, apiUrl, apiKey string, orderData []byte) ([]byte, error)
 }
 
@@ -91,6 +92,18 @@ func (s *ecommerceService) CreateEcommerceBillingAddress(ctx context.Context, ap
 	}
 
 	fmt.Printf("Billing address creation response: %s\n", string(respBody))
+	return respBody, nil
+}
+
+func (s *ecommerceService) CreateEcommerceShippingAddress(ctx context.Context, apiUrl, apiKey string, customerID int, addressData []byte) ([]byte, error) {
+	fmt.Printf("Creating shipping address for customer %d in ecommerce with data: %s\n", customerID, string(addressData))
+
+	respBody, err := s.repo.CreateShippingAddress(apiUrl, apiKey, customerID, addressData)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create shipping address: %w", err)
+	}
+
+	fmt.Printf("Shipping address creation response: %s\n", string(respBody))
 	return respBody, nil
 }
 
