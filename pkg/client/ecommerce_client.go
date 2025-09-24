@@ -183,26 +183,59 @@ func (c *ecommerceClient) GetCustomerByID(baseUrl, apiKey, id string) ([]byte, e
 }
 
 func (c *ecommerceClient) GetAllItems(baseUrl, apiKey string) ([]byte, error) {
-	url := fmt.Sprintf("%s/api/products", baseUrl)
+    var allProducts []map[string]interface{}
+    page := 1
+    limit := 100 
 
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %w", err)
-	}
+    for {
+        url := fmt.Sprintf("%s/api/products?Page=%d&Limit=%d", baseUrl, page, limit)
 
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", apiKey))
+        req, err := http.NewRequest("GET", url, nil)
+        if err != nil {
+            return nil, fmt.Errorf("failed to create request: %w", err)
+        }
+        req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", apiKey))
 
-	resp, err := c.httpClient.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("failed to send request: %w", err)
-	}
-	defer resp.Body.Close()
+        resp, err := c.httpClient.Do(req)
+        if err != nil {
+            return nil, fmt.Errorf("failed to send request: %w", err)
+        }
+        defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("failed to get all items, status code: %d", resp.StatusCode)
-	}
+        if resp.StatusCode != http.StatusOK {
+            return nil, fmt.Errorf("failed to get items, status code: %d", resp.StatusCode)
+        }
 
-	return ioutil.ReadAll(resp.Body)
+        bodyBytes, err := ioutil.ReadAll(resp.Body)
+        if err != nil {
+            return nil, fmt.Errorf("failed to read response body: %w", err)
+        }
+
+        var response struct {
+            Products []map[string]interface{} `json:"products"`
+        }
+        if err := json.Unmarshal(bodyBytes, &response); err != nil {
+            return nil, fmt.Errorf("failed to unmarshal response: %w", err)
+        }
+
+        if len(response.Products) == 0 {
+            break
+        }
+
+        allProducts = append(allProducts, response.Products...)
+
+        if len(response.Products) < limit {
+            break
+        }
+
+        page++
+    }
+
+    finalResponse := map[string]interface{}{
+        "products": allProducts,
+    }
+
+    return json.Marshal(finalResponse)
 }
 
 func (c *ecommerceClient) CreateCustomer(baseUrl, apiKey string, customerData []byte) ([]byte, error) {
