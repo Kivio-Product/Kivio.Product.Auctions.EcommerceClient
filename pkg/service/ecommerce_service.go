@@ -80,7 +80,6 @@ func (s *ecommerceService) CreateEcommerceCustomer(ctx context.Context, apiUrl, 
 		return nil, fmt.Errorf("failed to create customer: %w", err)
 	}
 
-	fmt.Printf("Customer creation response: %s\n", string(respBody))
 	return respBody, nil
 }
 
@@ -92,7 +91,6 @@ func (s *ecommerceService) CreateEcommerceBillingAddress(ctx context.Context, ap
 		return nil, fmt.Errorf("failed to create billing address: %w", err)
 	}
 
-	fmt.Printf("Billing address creation response: %s\n", string(respBody))
 	return respBody, nil
 }
 
@@ -104,7 +102,6 @@ func (s *ecommerceService) CreateEcommerceShippingAddress(ctx context.Context, a
 		return nil, fmt.Errorf("failed to create shipping address: %w", err)
 	}
 
-	fmt.Printf("Shipping address creation response: %s\n", string(respBody))
 	return respBody, nil
 }
 
@@ -116,7 +113,6 @@ func (s *ecommerceService) CreateEcommerceShoppingCartItem(ctx context.Context, 
 		return nil, fmt.Errorf("failed to create shopping cart item: %w", err)
 	}
 
-	fmt.Printf("Shopping cart item creation response: %s\n", string(respBody))
 	return respBody, nil
 }
 
@@ -128,6 +124,5 @@ func (s *ecommerceService) CreateEcommerceOrder(ctx context.Context, apiUrl, api
 		return nil, fmt.Errorf("failed to create order: %w", err)
 	}
 
-	fmt.Printf("Order creation response: %s\n", string(respBody))
 	return respBody, nil
 }
