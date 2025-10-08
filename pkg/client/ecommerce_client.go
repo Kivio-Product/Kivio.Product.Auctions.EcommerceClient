@@ -108,7 +108,6 @@ func (c *ecommerceClient) GetItems(baseUrl, apiKey string, page, limit int, publ
 }
 
 func (c *ecommerceClient) GetItemByID(baseUrl, apiKey, itemId string) ([]byte, error) {
-	fmt.Println("Fetching item by ID:", itemId, "from API URL:", baseUrl)
 	url := fmt.Sprintf("%s/api/products/%s", baseUrl, itemId)
 
 	req, err := http.NewRequest("GET", url, nil)
@@ -119,7 +118,6 @@ func (c *ecommerceClient) GetItemByID(baseUrl, apiKey, itemId string) ([]byte, e
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", apiKey))
 
 	resp, err := c.httpClient.Do(req)
-	fmt.Println("Request sent to:", url)
 	if err != nil {
 		return nil, fmt.Errorf("failed to send request: %w", err)
 	}
@@ -128,8 +126,6 @@ func (c *ecommerceClient) GetItemByID(baseUrl, apiKey, itemId string) ([]byte, e
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("failed to get item, status code: %d", resp.StatusCode)
 	}
-
-	fmt.Println("Response status code:", resp.Body)
 
 	return ioutil.ReadAll(resp.Body)
 }
@@ -183,59 +179,59 @@ func (c *ecommerceClient) GetCustomerByID(baseUrl, apiKey, id string) ([]byte, e
 }
 
 func (c *ecommerceClient) GetAllItems(baseUrl, apiKey string) ([]byte, error) {
-    var allProducts []map[string]interface{}
-    page := 1
-    limit := 100 
+	var allProducts []map[string]interface{}
+	page := 1
+	limit := 100
 
-    for {
-        url := fmt.Sprintf("%s/api/products?Page=%d&Limit=%d", baseUrl, page, limit)
+	for {
+		url := fmt.Sprintf("%s/api/products?Page=%d&Limit=%d", baseUrl, page, limit)
 
-        req, err := http.NewRequest("GET", url, nil)
-        if err != nil {
-            return nil, fmt.Errorf("failed to create request: %w", err)
-        }
-        req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", apiKey))
+		req, err := http.NewRequest("GET", url, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create request: %w", err)
+		}
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", apiKey))
 
-        resp, err := c.httpClient.Do(req)
-        if err != nil {
-            return nil, fmt.Errorf("failed to send request: %w", err)
-        }
-        defer resp.Body.Close()
+		resp, err := c.httpClient.Do(req)
+		if err != nil {
+			return nil, fmt.Errorf("failed to send request: %w", err)
+		}
+		defer resp.Body.Close()
 
-        if resp.StatusCode != http.StatusOK {
-            return nil, fmt.Errorf("failed to get items, status code: %d", resp.StatusCode)
-        }
+		if resp.StatusCode != http.StatusOK {
+			return nil, fmt.Errorf("failed to get items, status code: %d", resp.StatusCode)
+		}
 
-        bodyBytes, err := ioutil.ReadAll(resp.Body)
-        if err != nil {
-            return nil, fmt.Errorf("failed to read response body: %w", err)
-        }
+		bodyBytes, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read response body: %w", err)
+		}
 
-        var response struct {
-            Products []map[string]interface{} `json:"products"`
-        }
-        if err := json.Unmarshal(bodyBytes, &response); err != nil {
-            return nil, fmt.Errorf("failed to unmarshal response: %w", err)
-        }
+		var response struct {
+			Products []map[string]interface{} `json:"products"`
+		}
+		if err := json.Unmarshal(bodyBytes, &response); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal response: %w", err)
+		}
 
-        if len(response.Products) == 0 {
-            break
-        }
+		if len(response.Products) == 0 {
+			break
+		}
 
-        allProducts = append(allProducts, response.Products...)
+		allProducts = append(allProducts, response.Products...)
 
-        if len(response.Products) < limit {
-            break
-        }
+		if len(response.Products) < limit {
+			break
+		}
 
-        page++
-    }
+		page++
+	}
 
-    finalResponse := map[string]interface{}{
-        "products": allProducts,
-    }
+	finalResponse := map[string]interface{}{
+		"products": allProducts,
+	}
 
-    return json.Marshal(finalResponse)
+	return json.Marshal(finalResponse)
 }
 
 func (c *ecommerceClient) CreateCustomer(baseUrl, apiKey string, customerData []byte) ([]byte, error) {
