@@ -23,6 +23,7 @@ type EcommerceService interface {
 	CreateEcommerceShippingAddress(ctx context.Context, apiUrl, apiKey string, customerID int, addressData []byte) ([]byte, error)
 	CreateEcommerceShoppingCartItem(ctx context.Context, apiUrl, apiKey string, cartItemData []byte) ([]byte, error)
 	CreateEcommerceOrder(ctx context.Context, apiUrl, apiKey string, orderData []byte) ([]byte, error)
+	UpdateOrderItemPrice(ctx context.Context, apiUrl, apiKey string, orderID, itemID int, orderItemData []byte) error
 }
 
 type ecommerceService struct {
@@ -124,4 +125,15 @@ func (s *ecommerceService) CreateEcommerceOrder(ctx context.Context, apiUrl, api
 	}
 
 	return respBody, nil
+}
+
+func (s *ecommerceService) UpdateOrderItemPrice(ctx context.Context, apiUrl, apiKey string, orderID, itemID int, orderItemData []byte) error {
+	fmt.Printf("Updating order item price for order %d, item %d with data: %s\n", orderID, itemID, string(orderItemData))
+
+	err := s.repo.UpdateOrderItemPrice(apiUrl, apiKey, orderID, itemID, orderItemData)
+	if err != nil {
+		return fmt.Errorf("failed to update order item price: %w", err)
+	}
+
+	return nil
 }

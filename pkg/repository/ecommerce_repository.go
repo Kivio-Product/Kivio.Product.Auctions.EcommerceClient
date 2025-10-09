@@ -25,6 +25,7 @@ type EcommerceRepository interface {
 	CreateShippingAddress(baseUrl, apiKey string, customerID int, addressData []byte) ([]byte, error)
 	CreateShoppingCartItem(baseUrl, apiKey string, cartItemData []byte) ([]byte, error)
 	CreateOrder(baseUrl, apiKey string, orderData []byte) ([]byte, error)
+	UpdateOrderItemPrice(baseUrl, apiKey string, orderID, itemID int, orderItemData []byte) error
 }
 
 type ecommerceRepository struct {
@@ -246,4 +247,8 @@ func (r *ecommerceRepository) CreateShoppingCartItem(baseUrl, apiKey string, car
 
 func (r *ecommerceRepository) CreateOrder(baseUrl, apiKey string, orderData []byte) ([]byte, error) {
 	return r.client.CreateOrder(baseUrl, apiKey, orderData)
+}
+
+func (r *ecommerceRepository) UpdateOrderItemPrice(baseUrl, apiKey string, orderID, itemID int, orderItemData []byte) error {
+	return r.client.UpdateOrderItemPrice(baseUrl, apiKey, orderID, itemID, orderItemData)
 }

@@ -21,6 +21,7 @@ type EcommerceClient interface {
 	CreateShippingAddress(baseUrl, apiKey string, customerID int, addressData []byte) ([]byte, error)
 	CreateShoppingCartItem(baseUrl, apiKey string, cartItemData []byte) ([]byte, error)
 	CreateOrder(baseUrl, apiKey string, orderData []byte) ([]byte, error)
+	UpdateOrderItemPrice(baseUrl, apiKey string, orderID, itemID int, orderItemData []byte) error
 }
 
 type ecommerceClient struct {
@@ -382,4 +383,38 @@ func (c *ecommerceClient) CreateOrder(baseUrl, apiKey string, orderData []byte) 
 	}
 
 	return ioutil.ReadAll(resp.Body)
+}
+
+func (c *ecommerceClient) UpdateOrderItemPrice(baseUrl, apiKey string, orderID, itemID int, orderItemData []byte) error {
+	url := fmt.Sprintf("%s/api/orders/%d/items/%d", baseUrl, orderID, itemID)
+	fmt.Printf("[HTTP] PUT %s\n", url)
+	fmt.Printf("[HTTP] Payload: %s\n", string(orderItemData))
+
+	req, err := http.NewRequest("PUT", url, bytes.NewBuffer(orderItemData))
+	if err != nil {
+		fmt.Printf("[HTTP] ERROR: Failed to create request: %v\n", err)
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", apiKey))
+	req.Header.Set("Content-Type", "application/json-patch+json")
+	req.Header.Set("accept", "text/plain")
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		fmt.Printf("[HTTP] ERROR: Failed to send request: %v\n", err)
+		return fmt.Errorf("failed to send request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	fmt.Printf("[HTTP] Response Status: %d\n", resp.StatusCode)
+
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
+		bodyBytes, _ := ioutil.ReadAll(resp.Body)
+		fmt.Printf("[HTTP] ERROR: Unexpected status code: %d, Body: %s\n", resp.StatusCode, string(bodyBytes))
+		return fmt.Errorf("failed to update order item price, status code: %d", resp.StatusCode)
+	}
+
+	fmt.Printf("[HTTP] SUCCESS: Order item price updated\n")
+	return nil
 }
