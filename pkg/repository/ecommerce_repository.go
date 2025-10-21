@@ -20,12 +20,14 @@ type EcommerceRepository interface {
 	GetApiKey(username, password, tokenUrl string) (string, error)
 	UpdateItemStock(baseUrl, apiKey, itemId string, newStock int64) error
 	GetAllItemsRaw(baseUrl, apiKey string) ([]byte, error)
+	GetStores(baseUrl, apiKey string) ([]byte, error)
 	CreateCustomer(baseUrl, apiKey string, customerData []byte) ([]byte, error)
 	CreateBillingAddress(baseUrl, apiKey string, customerID int, addressData []byte) ([]byte, error)
 	CreateShippingAddress(baseUrl, apiKey string, customerID int, addressData []byte) ([]byte, error)
 	CreateShoppingCartItem(baseUrl, apiKey string, cartItemData []byte) ([]byte, error)
 	CreateOrder(baseUrl, apiKey string, orderData []byte) ([]byte, error)
 	UpdateOrderItemPrice(baseUrl, apiKey string, orderID, itemID int, orderItemData []byte) error
+	UpdateOrder(baseUrl, apiKey string, orderID int, orderData []byte) error
 }
 
 type ecommerceRepository struct {
@@ -251,4 +253,12 @@ func (r *ecommerceRepository) CreateOrder(baseUrl, apiKey string, orderData []by
 
 func (r *ecommerceRepository) UpdateOrderItemPrice(baseUrl, apiKey string, orderID, itemID int, orderItemData []byte) error {
 	return r.client.UpdateOrderItemPrice(baseUrl, apiKey, orderID, itemID, orderItemData)
+}
+
+func (r *ecommerceRepository) GetStores(baseUrl, apiKey string) ([]byte, error) {
+	return r.client.GetStores(baseUrl, apiKey)
+}
+
+func (r *ecommerceRepository) UpdateOrder(baseUrl, apiKey string, orderID int, orderData []byte) error {
+	return r.client.UpdateOrder(baseUrl, apiKey, orderID, orderData)
 }

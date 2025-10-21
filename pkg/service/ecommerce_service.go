@@ -18,12 +18,14 @@ type EcommerceService interface {
 	GetApiKey(ctx context.Context, username, password, tokenUrl string) (string, error)
 	UpdateItemStock(ctx context.Context, apiUrl, apiKey, itemId string, newStock int) error
 	GetAllItemsRaw(ctx context.Context, apiUrl, apiKey string) ([]byte, error)
+	GetStores(ctx context.Context, apiUrl, apiKey string) ([]byte, error)
 	CreateEcommerceCustomer(ctx context.Context, apiUrl, apiKey string, customerData []byte) ([]byte, error)
 	CreateEcommerceBillingAddress(ctx context.Context, apiUrl, apiKey string, customerID int, addressData []byte) ([]byte, error)
 	CreateEcommerceShippingAddress(ctx context.Context, apiUrl, apiKey string, customerID int, addressData []byte) ([]byte, error)
 	CreateEcommerceShoppingCartItem(ctx context.Context, apiUrl, apiKey string, cartItemData []byte) ([]byte, error)
 	CreateEcommerceOrder(ctx context.Context, apiUrl, apiKey string, orderData []byte) ([]byte, error)
 	UpdateOrderItemPrice(ctx context.Context, apiUrl, apiKey string, orderID, itemID int, orderItemData []byte) error
+	UpdateOrder(ctx context.Context, apiUrl, apiKey string, orderID int, orderData []byte) error
 }
 
 type ecommerceService struct {
@@ -133,6 +135,28 @@ func (s *ecommerceService) UpdateOrderItemPrice(ctx context.Context, apiUrl, api
 	err := s.repo.UpdateOrderItemPrice(apiUrl, apiKey, orderID, itemID, orderItemData)
 	if err != nil {
 		return fmt.Errorf("failed to update order item price: %w", err)
+	}
+
+	return nil
+}
+
+func (s *ecommerceService) GetStores(ctx context.Context, apiUrl, apiKey string) ([]byte, error) {
+	fmt.Printf("Getting stores from ecommerce\n")
+
+	respBody, err := s.repo.GetStores(apiUrl, apiKey)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get stores: %w", err)
+	}
+
+	return respBody, nil
+}
+
+func (s *ecommerceService) UpdateOrder(ctx context.Context, apiUrl, apiKey string, orderID int, orderData []byte) error {
+	fmt.Printf("Updating order %d with data: %s\n", orderID, string(orderData))
+
+	err := s.repo.UpdateOrder(apiUrl, apiKey, orderID, orderData)
+	if err != nil {
+		return fmt.Errorf("failed to update order: %w", err)
 	}
 
 	return nil
