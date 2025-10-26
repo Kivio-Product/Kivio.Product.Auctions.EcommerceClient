@@ -14,6 +14,7 @@ type EcommerceRepository interface {
 	GetItems(baseUrl, apiKey string, page, limit int) ([]domain.Item, error)
 	GetItemsRaw(baseUrl, apiKey string, page, limit int, publishedStatus bool) ([]byte, error)
 	GetItemByID(baseUrl, apiKey, itemId string) (*domain.Item, error)
+	GetItemByIDWithDetails(baseUrl, apiKey, itemId string) (*domain.ItemDetails, error)
 	GetItemByIDRaw(baseUrl, apiKey, itemId string) ([]byte, error)
 	GetCustomers(baseUrl, apiKey string) ([]domain.Customer, error)
 	GetCustomerByID(baseUrl, apiKey, id string) (*domain.Customer, error)
@@ -155,6 +156,64 @@ func (r *ecommerceRepository) GetItemByID(baseUrl, apiKey, itemId string) (*doma
 	}
 
 	return item, nil
+}
+
+func (r *ecommerceRepository) GetItemByIDWithDetails(baseUrl, apiKey, itemId string) (*domain.ItemDetails, error) {
+	itemId = strings.TrimPrefix(itemId, "kivio-ecommerce∼")
+	respBody, err := r.client.GetItemByID(baseUrl, apiKey, itemId)
+	if err != nil {
+		return nil, err
+	}
+
+	type Image struct {
+		Src string `json:"src"`
+	}
+
+	type Product struct {
+		ID               int     `json:"id"`
+		Name             string  `json:"name"`
+		ShortDescription string  `json:"short_description"`
+		FullDescription  string  `json:"full_description"`
+		Price            float64 `json:"price"`
+		StockQuantity    int     `json:"stock_quantity"`
+		Images           []Image `json:"images"`
+		SKU              string  `json:"sku"`
+	}
+
+	type ApiResponse struct {
+		Products []Product `json:"products"`
+	}
+
+	var apiResponse ApiResponse
+	if err := json.Unmarshal(respBody, &apiResponse); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
+	}
+
+	if len(apiResponse.Products) == 0 {
+		return nil, fmt.Errorf("product not found")
+	}
+
+	product := apiResponse.Products[0]
+
+	var imageURL string
+	if len(product.Images) > 0 {
+		imageURL = product.Images[0].Src
+	}
+
+	itemDetails := &domain.ItemDetails{
+		Item: domain.Item{
+			ItemId:      fmt.Sprintf("kivio-ecommerce∼%d", product.ID),
+			Name:        product.Name,
+			Description: product.ShortDescription,
+			ExternalId:  product.SKU,
+			Source:      "kivio ecommerce",
+			Url:         imageURL,
+		},
+		Availability: product.StockQuantity,
+		Price:        product.Price,
+	}
+
+	return itemDetails, nil
 }
 
 func (r *ecommerceRepository) GetItemByIDRaw(baseUrl, apiKey, itemId string) ([]byte, error) {
