@@ -10,6 +10,7 @@ import (
 
 type EcommerceService interface {
 	GetItems(ctx context.Context, apiUrl, apiKey string, page, limit int) ([]domain.Item, error)
+	GetItemsWithLastItem(ctx context.Context, apiUrl, apiKey string, lastItemID string, limit int) ([]domain.Item, string, error)
 	GetItemsRaw(ctx context.Context, apiUrl, apiKey string, page, limit int, publishedStatus bool) ([]byte, error)
 	GetItemByID(ctx context.Context, id, apiUrl, apiKey string) (*domain.Item, error)
 	GetItemByIDWithDetails(ctx context.Context, id, apiUrl, apiKey string) (*domain.ItemDetails, error)
@@ -41,6 +42,10 @@ func NewEcommerceService(repo repository.EcommerceRepository) EcommerceService {
 
 func (s *ecommerceService) GetItems(ctx context.Context, apiUrl, apiKey string, page, limit int) ([]domain.Item, error) {
 	return s.repo.GetItems(apiUrl, apiKey, page, limit)
+}
+
+func (s *ecommerceService) GetItemsWithLastItem(ctx context.Context, apiUrl, apiKey string, lastItemID string, limit int) ([]domain.Item, string, error) {
+	return s.repo.GetItemsWithLastItem(apiUrl, apiKey, lastItemID, limit)
 }
 
 func (s *ecommerceService) GetItemsRaw(ctx context.Context, apiUrl, apiKey string, page, limit int, publishedStatus bool) ([]byte, error) {

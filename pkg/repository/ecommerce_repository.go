@@ -12,6 +12,7 @@ import (
 
 type EcommerceRepository interface {
 	GetItems(baseUrl, apiKey string, page, limit int) ([]domain.Item, error)
+	GetItemsWithLastItem(baseUrl, apiKey string, lastItemID string, limit int) ([]domain.Item, string, error)
 	GetItemsRaw(baseUrl, apiKey string, page, limit int, publishedStatus bool) ([]byte, error)
 	GetItemByID(baseUrl, apiKey, itemId string) (*domain.Item, error)
 	GetItemByIDWithDetails(baseUrl, apiKey, itemId string) (*domain.ItemDetails, error)
@@ -99,6 +100,98 @@ func (r *ecommerceRepository) GetItems(baseUrl, apiKey string, page, limit int) 
 	}
 
 	return items, nil
+}
+
+func (r *ecommerceRepository) GetItemsWithLastItem(baseUrl, apiKey string, lastItemID string, limit int) ([]domain.Item, string, error) {
+	type Product struct {
+		ID            int    `json:"id"`
+		Name          string `json:"name"`
+		Description   string `json:"short_description"`
+		StockQuantity int64  `json:"stock_quantity"`
+		Images        []struct {
+			Src string `json:"src"`
+		} `json:"images"`
+		Published bool `json:"published"`
+	}
+
+	type ApiResponse struct {
+		Products []Product `json:"products"`
+		Total    int       `json:"total"`
+		Pages    int       `json:"pages"`
+	}
+
+	var items []domain.Item
+	currentPage := 1
+	maxPages := 100
+	foundCursor := lastItemID == ""
+	var nextItemID string
+
+	for len(items) < limit && currentPage <= maxPages {
+		respBody, err := r.client.GetItems(baseUrl, apiKey, currentPage, limit, true)
+		if err != nil {
+			return nil, "", err
+		}
+
+		var apiResponse ApiResponse
+		if err := json.Unmarshal(respBody, &apiResponse); err != nil {
+			return nil, "", fmt.Errorf("failed to unmarshal items: %w", err)
+		}
+
+		if len(apiResponse.Products) == 0 {
+			break
+		}
+
+		for _, product := range apiResponse.Products {
+			if !product.Published || product.StockQuantity <= 0 {
+				continue
+			}
+
+			productID := fmt.Sprintf("kivio-ecommerce∼%d", product.ID)
+
+			if !foundCursor {
+				if productID == lastItemID {
+					foundCursor = true
+				}
+				continue
+			}
+
+			if len(items) >= limit {
+				break
+			}
+
+			var imageURL string
+			if len(product.Images) > 0 {
+				imageURL = product.Images[0].Src
+			}
+
+			item := domain.Item{
+				ItemId:      productID,
+				Name:        product.Name,
+				Description: product.Description,
+				ExternalId:  productID,
+				Url:         imageURL,
+			}
+			items = append(items, item)
+
+			nextItemID = productID
+		}
+
+		if len(items) >= limit {
+			break
+		}
+
+		if len(apiResponse.Products) < limit {
+			break
+		}
+
+		currentPage++
+	}
+
+	if len(items) == 0 {
+		nextItemID = ""
+	}
+
+	return items, nextItemID, nil
 }
 
 func (r *ecommerceRepository) GetItemsRaw(baseUrl, apiKey string, page, limit int, publishedStatus bool) ([]byte, error) {
