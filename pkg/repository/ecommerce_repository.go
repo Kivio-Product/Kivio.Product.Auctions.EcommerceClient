@@ -28,6 +28,7 @@ type EcommerceRepository interface {
 	CreateShippingAddress(baseUrl, apiKey string, customerID int, addressData []byte) ([]byte, error)
 	CreateShoppingCartItem(baseUrl, apiKey string, cartItemData []byte) ([]byte, error)
 	CreateOrder(baseUrl, apiKey string, orderData []byte) ([]byte, error)
+	CountEcommerceItems(baseUrl, apiKey string) (int64, error)
 	UpdateOrderItemPrice(baseUrl, apiKey string, orderID, itemID int, orderItemData []byte) error
 	UpdateOrder(baseUrl, apiKey string, orderID int, orderData []byte) error
 }
@@ -196,6 +197,10 @@ func (r *ecommerceRepository) GetItemsWithLastItem(baseUrl, apiKey string, lastI
 
 func (r *ecommerceRepository) GetItemsRaw(baseUrl, apiKey string, page, limit int, publishedStatus bool) ([]byte, error) {
 	return r.client.GetItems(baseUrl, apiKey, page, limit, publishedStatus)
+}
+
+func (r *ecommerceRepository) CountEcommerceItems(baseUrl, apiKey string) (int64, error) {
+	return r.client.CountEcommerceItems(baseUrl, apiKey)
 }
 
 func (r *ecommerceRepository) GetItemByID(baseUrl, apiKey, itemId string) (*domain.Item, error) {
