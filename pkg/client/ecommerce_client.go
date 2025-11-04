@@ -22,6 +22,7 @@ type EcommerceClient interface {
 	CreateShippingAddress(baseUrl, apiKey string, customerID int, addressData []byte) ([]byte, error)
 	CreateShoppingCartItem(baseUrl, apiKey string, cartItemData []byte) ([]byte, error)
 	CreateOrder(baseUrl, apiKey string, orderData []byte) ([]byte, error)
+	CountEcommerceItems(baseUrl, apiKey string) (int64, error)
 	UpdateOrderItemPrice(baseUrl, apiKey string, orderID, itemID int, orderItemData []byte) error
 	UpdateOrder(baseUrl, apiKey string, orderID int, orderData []byte) error
 }
@@ -108,6 +109,38 @@ func (c *ecommerceClient) GetItems(baseUrl, apiKey string, page, limit int, publ
 	}
 
 	return ioutil.ReadAll(resp.Body)
+}
+
+func (c *ecommerceClient) CountEcommerceItems(baseUrl, apiKey string) (int64, error) {
+	url := fmt.Sprintf("%s/api/products/count?PublishedStatus=true", baseUrl)
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return 0, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", apiKey))
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return 0, fmt.Errorf("failed to send request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return 0, fmt.Errorf("failed to get items, status code: %d", resp.StatusCode)
+	}
+
+	var result struct {
+		Count int64 `json:"count"`
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return 0, fmt.Errorf("failed to decode JSON: %w", err)
+	}
+
+	fmt.Println("Total items:", result.Count)
+	return result.Count, nil
 }
 
 func (c *ecommerceClient) GetItemByID(baseUrl, apiKey, itemId string) ([]byte, error) {
