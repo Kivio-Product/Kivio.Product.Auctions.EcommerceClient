@@ -10,7 +10,7 @@ import (
 
 type EcommerceService interface {
 	GetItems(ctx context.Context, apiUrl, apiKey string, page, limit int) ([]domain.Item, error)
-	GetItemsWithLastItem(ctx context.Context, apiUrl, apiKey string, lastItemID string, limit int) ([]domain.Item, string, error)
+	GetItemsWithLastItem(ctx context.Context, apiUrl, apiKey string, lastItemID string, limit int, filters map[string]string) ([]domain.Item, string, error)
 	GetItemsRaw(ctx context.Context, apiUrl, apiKey string, page, limit int, publishedStatus bool) ([]byte, error)
 	GetItemByID(ctx context.Context, id, apiUrl, apiKey string) (*domain.Item, error)
 	GetItemByIDWithDetails(ctx context.Context, id, apiUrl, apiKey string) (*domain.ItemDetails, error)
@@ -26,7 +26,7 @@ type EcommerceService interface {
 	CreateEcommerceShippingAddress(ctx context.Context, apiUrl, apiKey string, customerID int, addressData []byte) ([]byte, error)
 	CreateEcommerceShoppingCartItem(ctx context.Context, apiUrl, apiKey string, cartItemData []byte) ([]byte, error)
 	CreateEcommerceOrder(ctx context.Context, apiUrl, apiKey string, orderData []byte) ([]byte, error)
-	CountEcommerceItems(ctx context.Context, apiUrl, apiKey string) (int64, error)
+	CountEcommerceItems(ctx context.Context, apiUrl, apiKey string, filters map[string]string) (int64, error)
 	UpdateOrderItemPrice(ctx context.Context, apiUrl, apiKey string, orderID, itemID int, orderItemData []byte) error
 	UpdateOrder(ctx context.Context, apiUrl, apiKey string, orderID int, orderData []byte) error
 }
@@ -45,8 +45,8 @@ func (s *ecommerceService) GetItems(ctx context.Context, apiUrl, apiKey string, 
 	return s.repo.GetItems(apiUrl, apiKey, page, limit)
 }
 
-func (s *ecommerceService) GetItemsWithLastItem(ctx context.Context, apiUrl, apiKey string, lastItemID string, limit int) ([]domain.Item, string, error) {
-	return s.repo.GetItemsWithLastItem(apiUrl, apiKey, lastItemID, limit)
+func (s *ecommerceService) GetItemsWithLastItem(ctx context.Context, apiUrl, apiKey string, lastItemID string, limit int, filters map[string]string) ([]domain.Item, string, error) {
+	return s.repo.GetItemsWithLastItem(apiUrl, apiKey, lastItemID, limit, filters)
 }
 
 func (s *ecommerceService) GetItemsRaw(ctx context.Context, apiUrl, apiKey string, page, limit int, publishedStatus bool) ([]byte, error) {
@@ -85,8 +85,8 @@ func (s *ecommerceService) GetAllItemsRaw(ctx context.Context, apiUrl, apiKey st
 	return s.repo.GetAllItemsRaw(apiUrl, apiKey)
 }
 
-func (s *ecommerceService) CountEcommerceItems(ctx context.Context, apiUrl, apiKey string) (int64, error) {
-	return s.repo.CountEcommerceItems(apiUrl, apiKey)
+func (s *ecommerceService) CountEcommerceItems(ctx context.Context, apiUrl, apiKey string, filters map[string]string) (int64, error) {
+	return s.repo.CountEcommerceItems(apiUrl, apiKey, filters)
 }
 
 func (s *ecommerceService) CreateEcommerceCustomer(ctx context.Context, apiUrl, apiKey string, customerData []byte) ([]byte, error) {

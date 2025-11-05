@@ -6,12 +6,13 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"time"
 )
 
 type EcommerceClient interface {
 	GetApiKey(username, password, tokenUrl string) (string, error)
-	GetItems(baseUrl, apiKey string, page, limit int, publishedStatus bool) ([]byte, error)
+	GetItems(baseUrl, apiKey string, page, limit int, publishedStatus bool, filters map[string]string) ([]byte, error)
 	GetItemByID(baseUrl, apiKey, itemId string) ([]byte, error)
 	GetCustomers(baseUrl, apiKey string) ([]byte, error)
 	GetCustomerByID(baseUrl, apiKey, id string) ([]byte, error)
@@ -22,7 +23,7 @@ type EcommerceClient interface {
 	CreateShippingAddress(baseUrl, apiKey string, customerID int, addressData []byte) ([]byte, error)
 	CreateShoppingCartItem(baseUrl, apiKey string, cartItemData []byte) ([]byte, error)
 	CreateOrder(baseUrl, apiKey string, orderData []byte) ([]byte, error)
-	CountEcommerceItems(baseUrl, apiKey string) (int64, error)
+	CountEcommerceItems(baseUrl, apiKey string, filters map[string]string) (int64, error)
 	UpdateOrderItemPrice(baseUrl, apiKey string, orderID, itemID int, orderItemData []byte) error
 	UpdateOrder(baseUrl, apiKey string, orderID int, orderData []byte) error
 }
@@ -88,8 +89,8 @@ func (c *ecommerceClient) GetApiKey(username, password, tokenUrl string) (string
 	return apiKey, nil
 }
 
-func (c *ecommerceClient) GetItems(baseUrl, apiKey string, page, limit int, publishedStatus bool) ([]byte, error) {
-	url := fmt.Sprintf("%s/api/products?Page=%d&Limit=%d&PublishedStatus=%t", baseUrl, page, limit, publishedStatus)
+func (c *ecommerceClient) GetItems(baseUrl, apiKey string, page, limit int, publishedStatus bool, filters map[string]string) ([]byte, error) {
+	url := fmt.Sprintf("%s/api/products?Page=%d&Limit=%d&PublishedStatus=%t&Name=%s", baseUrl, page, limit, publishedStatus, url.PathEscape(filters["name"]))
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -111,8 +112,9 @@ func (c *ecommerceClient) GetItems(baseUrl, apiKey string, page, limit int, publ
 	return ioutil.ReadAll(resp.Body)
 }
 
-func (c *ecommerceClient) CountEcommerceItems(baseUrl, apiKey string) (int64, error) {
-	url := fmt.Sprintf("%s/api/products/count?PublishedStatus=true", baseUrl)
+func (c *ecommerceClient) CountEcommerceItems(baseUrl, apiKey string, filters map[string]string) (int64, error) {
+
+	url := fmt.Sprintf("%s/api/products/count?PublishedStatus=true&Name=%s", baseUrl, url.PathEscape(filters["name"]))
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {

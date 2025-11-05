@@ -12,7 +12,7 @@ import (
 
 type EcommerceRepository interface {
 	GetItems(baseUrl, apiKey string, page, limit int) ([]domain.Item, error)
-	GetItemsWithLastItem(baseUrl, apiKey string, lastItemID string, limit int) ([]domain.Item, string, error)
+	GetItemsWithLastItem(baseUrl, apiKey string, lastItemID string, limit int, filters map[string]string) ([]domain.Item, string, error)
 	GetItemsRaw(baseUrl, apiKey string, page, limit int, publishedStatus bool) ([]byte, error)
 	GetItemByID(baseUrl, apiKey, itemId string) (*domain.Item, error)
 	GetItemByIDWithDetails(baseUrl, apiKey, itemId string) (*domain.ItemDetails, error)
@@ -28,7 +28,7 @@ type EcommerceRepository interface {
 	CreateShippingAddress(baseUrl, apiKey string, customerID int, addressData []byte) ([]byte, error)
 	CreateShoppingCartItem(baseUrl, apiKey string, cartItemData []byte) ([]byte, error)
 	CreateOrder(baseUrl, apiKey string, orderData []byte) ([]byte, error)
-	CountEcommerceItems(baseUrl, apiKey string) (int64, error)
+	CountEcommerceItems(baseUrl, apiKey string, filters map[string]string) (int64, error)
 	UpdateOrderItemPrice(baseUrl, apiKey string, orderID, itemID int, orderItemData []byte) error
 	UpdateOrder(baseUrl, apiKey string, orderID int, orderData []byte) error
 }
@@ -48,7 +48,7 @@ func (r *ecommerceRepository) GetApiKey(username, password, tokenUrl string) (st
 }
 
 func (r *ecommerceRepository) GetItems(baseUrl, apiKey string, page, limit int) ([]domain.Item, error) {
-	respBody, err := r.client.GetItems(baseUrl, apiKey, page, limit, true)
+	respBody, err := r.client.GetItems(baseUrl, apiKey, page, limit, true, map[string]string{})
 	if err != nil {
 		return nil, err
 	}
@@ -103,7 +103,7 @@ func (r *ecommerceRepository) GetItems(baseUrl, apiKey string, page, limit int) 
 	return items, nil
 }
 
-func (r *ecommerceRepository) GetItemsWithLastItem(baseUrl, apiKey string, lastItemID string, limit int) ([]domain.Item, string, error) {
+func (r *ecommerceRepository) GetItemsWithLastItem(baseUrl, apiKey string, lastItemID string, limit int, filters map[string]string) ([]domain.Item, string, error) {
 	type Product struct {
 		ID            int    `json:"id"`
 		Name          string `json:"name"`
@@ -128,7 +128,7 @@ func (r *ecommerceRepository) GetItemsWithLastItem(baseUrl, apiKey string, lastI
 	var nextItemID string
 
 	for len(items) < limit && currentPage <= maxPages {
-		respBody, err := r.client.GetItems(baseUrl, apiKey, currentPage, limit, true)
+		respBody, err := r.client.GetItems(baseUrl, apiKey, currentPage, limit, true, filters)
 		if err != nil {
 			return nil, "", err
 		}
@@ -196,11 +196,11 @@ func (r *ecommerceRepository) GetItemsWithLastItem(baseUrl, apiKey string, lastI
 }
 
 func (r *ecommerceRepository) GetItemsRaw(baseUrl, apiKey string, page, limit int, publishedStatus bool) ([]byte, error) {
-	return r.client.GetItems(baseUrl, apiKey, page, limit, publishedStatus)
+	return r.client.GetItems(baseUrl, apiKey, page, limit, publishedStatus, map[string]string{})
 }
 
-func (r *ecommerceRepository) CountEcommerceItems(baseUrl, apiKey string) (int64, error) {
-	return r.client.CountEcommerceItems(baseUrl, apiKey)
+func (r *ecommerceRepository) CountEcommerceItems(baseUrl, apiKey string, filters map[string]string) (int64, error) {
+	return r.client.CountEcommerceItems(baseUrl, apiKey, filters)
 }
 
 func (r *ecommerceRepository) GetItemByID(baseUrl, apiKey, itemId string) (*domain.Item, error) {
