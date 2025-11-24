@@ -19,6 +19,7 @@ type EcommerceRepository interface {
 	GetItemByIDRaw(baseUrl, apiKey, itemId string) ([]byte, error)
 	GetCustomers(baseUrl, apiKey string) ([]domain.Customer, error)
 	GetCustomerByID(baseUrl, apiKey, id string) (*domain.Customer, error)
+	GetOrderEmails(baseUrl, apiKey string) ([]string, error)
 	GetApiKey(username, password, tokenUrl string) (string, error)
 	UpdateItemStock(baseUrl, apiKey, itemId string, newStock int64) error
 	GetAllItemsRaw(baseUrl, apiKey string) ([]byte, error)
@@ -350,6 +351,39 @@ func (r *ecommerceRepository) GetCustomerByID(baseUrl, apiKey, id string) (*doma
 	}
 
 	return &customer, nil
+}
+
+func (r *ecommerceRepository) GetOrderEmails(baseUrl, apiKey string) ([]string, error) {
+	respBody, err := r.client.GetOrders(baseUrl, apiKey)
+	if err != nil {
+		return nil, err
+	}
+
+	type BillingAddress struct {
+		Email string `json:"email"`
+	}
+
+	type Order struct {
+		BillingAddress *BillingAddress `json:"billing_address"`
+	}
+
+	type OrdersResponse struct {
+		Orders []Order `json:"orders"`
+	}
+
+	var resp OrdersResponse
+	if err := json.Unmarshal(respBody, &resp); err != nil {
+		return nil, fmt.Errorf("error decoding orders response: %w", err)
+	}
+
+	var emails []string
+	for _, order := range resp.Orders {
+		if order.BillingAddress != nil && order.BillingAddress.Email != "" {
+			emails = append(emails, order.BillingAddress.Email)
+		}
+	}
+
+	return emails, nil
 }
 
 func (r *ecommerceRepository) UpdateItemStock(baseUrl, apiKey, itemId string, newStock int64) error {

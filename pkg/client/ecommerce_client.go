@@ -16,6 +16,7 @@ type EcommerceClient interface {
 	GetItemByID(baseUrl, apiKey, itemId string) ([]byte, error)
 	GetCustomers(baseUrl, apiKey string) ([]byte, error)
 	GetCustomerByID(baseUrl, apiKey, id string) ([]byte, error)
+	GetOrders(baseUrl, apiKey string) ([]byte, error)
 	GetAllItems(baseUrl, apiKey string) ([]byte, error)
 	GetStores(baseUrl, apiKey string) ([]byte, error)
 	CreateCustomer(baseUrl, apiKey string, customerData []byte) ([]byte, error)
@@ -208,6 +209,28 @@ func (c *ecommerceClient) GetCustomerByID(baseUrl, apiKey, id string) ([]byte, e
 	if resp.StatusCode == http.StatusNotFound {
 		return nil, fmt.Errorf("customer not found")
 	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	}
+
+	return ioutil.ReadAll(resp.Body)
+}
+
+func (c *ecommerceClient) GetOrders(baseUrl, apiKey string) ([]byte, error) {
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/api/orders", baseUrl), nil)
+	if err != nil {
+		return nil, fmt.Errorf("error creating request: %w", err)
+	}
+
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", apiKey))
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("error making request: %w", err)
+	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)

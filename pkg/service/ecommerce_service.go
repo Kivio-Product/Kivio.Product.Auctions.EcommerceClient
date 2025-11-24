@@ -17,6 +17,7 @@ type EcommerceService interface {
 	GetItemByIDRaw(ctx context.Context, id, apiUrl, apiKey string) ([]byte, error)
 	GetCustomers(ctx context.Context, apiUrl, apiKey string) ([]domain.Customer, error)
 	GetCustomerByID(ctx context.Context, id, apiUrl, apiKey string) (*domain.Customer, error)
+	GetOrderEmails(ctx context.Context, apiUrl, apiKey string) ([]string, error)
 	GetApiKey(ctx context.Context, username, password, tokenUrl string) (string, error)
 	UpdateItemStock(ctx context.Context, apiUrl, apiKey, itemId string, newStock int) error
 	GetAllItemsRaw(ctx context.Context, apiUrl, apiKey string) ([]byte, error)
@@ -71,6 +72,10 @@ func (s *ecommerceService) GetCustomers(ctx context.Context, apiUrl, apiKey stri
 
 func (s *ecommerceService) GetCustomerByID(ctx context.Context, id, apiUrl, apiKey string) (*domain.Customer, error) {
 	return s.repo.GetCustomerByID(id, apiUrl, apiKey)
+}
+
+func (s *ecommerceService) GetOrderEmails(ctx context.Context, apiUrl, apiKey string) ([]string, error) {
+	return s.repo.GetOrderEmails(apiUrl, apiKey)
 }
 
 func (s *ecommerceService) GetApiKey(ctx context.Context, username, password, tokenUrl string) (string, error) {
