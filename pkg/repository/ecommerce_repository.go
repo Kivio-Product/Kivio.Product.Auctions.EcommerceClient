@@ -145,7 +145,7 @@ func (r *ecommerceRepository) GetItemsWithLastItem(baseUrl, apiKey string, lastI
 		}
 
 		for _, product := range apiResponse.Products {
-			if !product.Published || product.StockQuantity <= 0 {
+			if !product.Published {
 				continue
 			}
 
@@ -168,11 +168,12 @@ func (r *ecommerceRepository) GetItemsWithLastItem(baseUrl, apiKey string, lastI
 			}
 
 			item := domain.Item{
-				ItemId:      productID,
-				Name:        product.Name,
-				Description: product.Description,
-				ExternalId:  productID,
-				Url:         imageURL,
+				ItemId:        productID,
+				Name:          product.Name,
+				Description:   product.Description,
+				ExternalId:    productID,
+				Url:           imageURL,
+				StockQuantity: product.StockQuantity,
 			}
 			items = append(items, item)
 
