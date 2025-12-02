@@ -25,6 +25,7 @@ type EcommerceService interface {
 	CreateEcommerceCustomer(ctx context.Context, apiUrl, apiKey string, customerData []byte) ([]byte, error)
 	CreateEcommerceBillingAddress(ctx context.Context, apiUrl, apiKey string, customerID int, addressData []byte) ([]byte, error)
 	CreateEcommerceShippingAddress(ctx context.Context, apiUrl, apiKey string, customerID int, addressData []byte) ([]byte, error)
+	DeleteEcommerceShoppingCart(ctx context.Context, apiUrl, apiKey string, customerID int) error
 	CreateEcommerceShoppingCartItem(ctx context.Context, apiUrl, apiKey string, cartItemData []byte) ([]byte, error)
 	CreateEcommerceOrder(ctx context.Context, apiUrl, apiKey string, orderData []byte) ([]byte, error)
 	CountEcommerceItems(ctx context.Context, apiUrl, apiKey string, filters map[string]string) (int64, error)
@@ -125,6 +126,17 @@ func (s *ecommerceService) CreateEcommerceShippingAddress(ctx context.Context, a
 	}
 
 	return respBody, nil
+}
+
+func (s *ecommerceService) DeleteEcommerceShoppingCart(ctx context.Context, apiUrl, apiKey string, customerID int) error {
+	fmt.Printf("Deleting shopping cart for customer %d in ecommerce\n", customerID)
+
+	err := s.repo.DeleteShoppingCart(apiUrl, apiKey, customerID)
+	if err != nil {
+		return fmt.Errorf("failed to delete shopping cart: %w", err)
+	}
+
+	return nil
 }
 
 func (s *ecommerceService) CreateEcommerceShoppingCartItem(ctx context.Context, apiUrl, apiKey string, cartItemData []byte) ([]byte, error) {

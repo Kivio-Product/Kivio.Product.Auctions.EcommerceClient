@@ -22,6 +22,7 @@ type EcommerceClient interface {
 	CreateCustomer(baseUrl, apiKey string, customerData []byte) ([]byte, error)
 	CreateBillingAddress(baseUrl, apiKey string, customerID int, addressData []byte) ([]byte, error)
 	CreateShippingAddress(baseUrl, apiKey string, customerID int, addressData []byte) ([]byte, error)
+	DeleteShoppingCart(baseUrl, apiKey string, customerID int) error
 	CreateShoppingCartItem(baseUrl, apiKey string, cartItemData []byte) ([]byte, error)
 	CreateOrder(baseUrl, apiKey string, orderData []byte) ([]byte, error)
 	CountEcommerceItems(baseUrl, apiKey string, filters map[string]string) (int64, error)
@@ -383,6 +384,38 @@ func (c *ecommerceClient) CreateShippingAddress(baseUrl, apiKey string, customer
 	}
 
 	return ioutil.ReadAll(resp.Body)
+}
+
+func (c *ecommerceClient) DeleteShoppingCart(baseUrl, apiKey string, customerID int) error {
+	url := fmt.Sprintf("%s/api/shopping_cart_items?ShoppingCartType=ShoppingCart&CustomerId=%d", baseUrl, customerID)
+	fmt.Printf("[HTTP] DELETE %s\n", url)
+
+	req, err := http.NewRequest("DELETE", url, nil)
+	if err != nil {
+		fmt.Printf("[HTTP] ERROR: Failed to create request: %v\n", err)
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", apiKey))
+	req.Header.Set("accept", "*/*")
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		fmt.Printf("[HTTP] ERROR: Failed to send request: %v\n", err)
+		return fmt.Errorf("failed to send request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	fmt.Printf("[HTTP] Response Status: %d\n", resp.StatusCode)
+
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
+		bodyBytes, _ := ioutil.ReadAll(resp.Body)
+		fmt.Printf("[HTTP] ERROR: Unexpected status code: %d, Body: %s\n", resp.StatusCode, string(bodyBytes))
+		return fmt.Errorf("failed to delete shopping cart, status code: %d", resp.StatusCode)
+	}
+
+	fmt.Printf("[HTTP] SUCCESS: Shopping cart deleted for customer %d\n", customerID)
+	return nil
 }
 
 func (c *ecommerceClient) CreateShoppingCartItem(baseUrl, apiKey string, cartItemData []byte) ([]byte, error) {

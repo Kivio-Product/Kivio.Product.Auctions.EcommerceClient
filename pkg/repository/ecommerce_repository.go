@@ -27,6 +27,7 @@ type EcommerceRepository interface {
 	CreateCustomer(baseUrl, apiKey string, customerData []byte) ([]byte, error)
 	CreateBillingAddress(baseUrl, apiKey string, customerID int, addressData []byte) ([]byte, error)
 	CreateShippingAddress(baseUrl, apiKey string, customerID int, addressData []byte) ([]byte, error)
+	DeleteShoppingCart(baseUrl, apiKey string, customerID int) error
 	CreateShoppingCartItem(baseUrl, apiKey string, cartItemData []byte) ([]byte, error)
 	CreateOrder(baseUrl, apiKey string, orderData []byte) ([]byte, error)
 	CountEcommerceItems(baseUrl, apiKey string, filters map[string]string) (int64, error)
@@ -432,6 +433,10 @@ func (r *ecommerceRepository) CreateBillingAddress(baseUrl, apiKey string, custo
 
 func (r *ecommerceRepository) CreateShippingAddress(baseUrl, apiKey string, customerID int, addressData []byte) ([]byte, error) {
 	return r.client.CreateShippingAddress(baseUrl, apiKey, customerID, addressData)
+}
+
+func (r *ecommerceRepository) DeleteShoppingCart(baseUrl, apiKey string, customerID int) error {
+	return r.client.DeleteShoppingCart(baseUrl, apiKey, customerID)
 }
 
 func (r *ecommerceRepository) CreateShoppingCartItem(baseUrl, apiKey string, cartItemData []byte) ([]byte, error) {
