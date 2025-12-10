@@ -28,6 +28,7 @@ type EcommerceClient interface {
 	CountEcommerceItems(baseUrl, apiKey string, filters map[string]string) (int64, error)
 	UpdateOrderItemPrice(baseUrl, apiKey string, orderID, itemID int, orderItemData []byte) error
 	UpdateOrder(baseUrl, apiKey string, orderID int, orderData []byte) error
+	GetOrderByID(baseUrl, apiKey string, orderID int) ([]byte, error)
 }
 
 type ecommerceClient struct {
@@ -575,4 +576,35 @@ func (c *ecommerceClient) UpdateOrder(baseUrl, apiKey string, orderID int, order
 
 	fmt.Printf("[HTTP] SUCCESS: Order updated\n")
 	return nil
+}
+
+func (c *ecommerceClient) GetOrderByID(baseUrl, apiKey string, orderID int) ([]byte, error) {
+	url := fmt.Sprintf("%s/api/orders/%d", baseUrl, orderID)
+	fmt.Printf("[HTTP] GET %s\n", url)
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		fmt.Printf("[HTTP] ERROR: Failed to create request: %v\n", err)
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", apiKey))
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		fmt.Printf("[HTTP] ERROR: Failed to send request: %v\n", err)
+		return nil, fmt.Errorf("failed to send request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	fmt.Printf("[HTTP] Response Status: %d\n", resp.StatusCode)
+
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, _ := ioutil.ReadAll(resp.Body)
+		fmt.Printf("[HTTP] ERROR: Unexpected status code: %d, Body: %s\n", resp.StatusCode, string(bodyBytes))
+		return nil, fmt.Errorf("failed to get order by ID, status code: %d", resp.StatusCode)
+	}
+
+	return ioutil.ReadAll(resp.Body)
 }

@@ -31,6 +31,7 @@ type EcommerceService interface {
 	CountEcommerceItems(ctx context.Context, apiUrl, apiKey string, filters map[string]string) (int64, error)
 	UpdateOrderItemPrice(ctx context.Context, apiUrl, apiKey string, orderID, itemID int, orderItemData []byte) error
 	UpdateOrder(ctx context.Context, apiUrl, apiKey string, orderID int, orderData []byte) error
+	GetOrderByID(ctx context.Context, apiUrl, apiKey string, orderID int) ([]byte, error)
 }
 
 type ecommerceService struct {
@@ -192,4 +193,15 @@ func (s *ecommerceService) UpdateOrder(ctx context.Context, apiUrl, apiKey strin
 	}
 
 	return nil
+}
+
+func (s *ecommerceService) GetOrderByID(ctx context.Context, apiUrl, apiKey string, orderID int) ([]byte, error) {
+	fmt.Printf("Getting order by ID: %d from ecommerce\n", orderID)
+
+	respBody, err := s.repo.GetOrderByID(apiUrl, apiKey, orderID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get order by ID: %w", err)
+	}
+
+	return respBody, nil
 }

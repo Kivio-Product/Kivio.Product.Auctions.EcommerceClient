@@ -33,6 +33,7 @@ type EcommerceRepository interface {
 	CountEcommerceItems(baseUrl, apiKey string, filters map[string]string) (int64, error)
 	UpdateOrderItemPrice(baseUrl, apiKey string, orderID, itemID int, orderItemData []byte) error
 	UpdateOrder(baseUrl, apiKey string, orderID int, orderData []byte) error
+	GetOrderByID(baseUrl, apiKey string, orderID int) ([]byte, error)
 }
 
 type ecommerceRepository struct {
@@ -458,4 +459,8 @@ func (r *ecommerceRepository) GetStores(baseUrl, apiKey string) ([]byte, error) 
 
 func (r *ecommerceRepository) UpdateOrder(baseUrl, apiKey string, orderID int, orderData []byte) error {
 	return r.client.UpdateOrder(baseUrl, apiKey, orderID, orderData)
+}
+
+func (r *ecommerceRepository) GetOrderByID(baseUrl, apiKey string, orderID int) ([]byte, error) {
+	return r.client.GetOrderByID(baseUrl, apiKey, orderID)
 }
