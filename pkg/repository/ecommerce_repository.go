@@ -20,6 +20,7 @@ type EcommerceRepository interface {
 	GetCustomers(baseUrl, apiKey string) ([]domain.Customer, error)
 	GetCustomerByID(baseUrl, apiKey, id string) (*domain.Customer, error)
 	GetOrderEmails(baseUrl, apiKey string) ([]string, error)
+	GetAllOrders(baseUrl, apiKey string) ([]byte, error)
 	GetApiKey(username, password, tokenUrl string) (string, error)
 	UpdateItemStock(baseUrl, apiKey, itemId string, newStock int64) error
 	GetAllItemsRaw(baseUrl, apiKey string) ([]byte, error)
@@ -357,8 +358,11 @@ func (r *ecommerceRepository) GetCustomerByID(baseUrl, apiKey, id string) (*doma
 }
 
 func (r *ecommerceRepository) GetOrderEmails(baseUrl, apiKey string) ([]string, error) {
-	respBody, err := r.client.GetOrders(baseUrl, apiKey)
+	fmt.Printf("[GET_ORDER_EMAILS] Iniciando obtención de emails de órdenes (con paginación)\n")
+
+	respBody, err := r.client.GetAllOrders(baseUrl, apiKey)
 	if err != nil {
+		fmt.Printf("[GET_ORDER_EMAILS] ERROR al obtener todas las órdenes: %v\n", err)
 		return nil, err
 	}
 
@@ -376,15 +380,26 @@ func (r *ecommerceRepository) GetOrderEmails(baseUrl, apiKey string) ([]string, 
 
 	var resp OrdersResponse
 	if err := json.Unmarshal(respBody, &resp); err != nil {
+		fmt.Printf("[GET_ORDER_EMAILS] ERROR al decodificar respuesta: %v\n", err)
 		return nil, fmt.Errorf("error decoding orders response: %w", err)
 	}
 
+	fmt.Printf("[GET_ORDER_EMAILS] Se procesarán %d órdenes para extraer emails\n", len(resp.Orders))
+
 	var emails []string
+	emailsExtracted := 0
+	ordersWithoutEmail := 0
+
 	for _, order := range resp.Orders {
 		if order.BillingAddress != nil && order.BillingAddress.Email != "" {
 			emails = append(emails, order.BillingAddress.Email)
+			emailsExtracted++
+		} else {
+			ordersWithoutEmail++
 		}
 	}
+
+	fmt.Printf("[GET_ORDER_EMAILS] Resultado: %d emails extraídos, %d órdenes sin email\n", emailsExtracted, ordersWithoutEmail)
 
 	return emails, nil
 }
@@ -423,6 +438,10 @@ func (r *ecommerceRepository) UpdateItemStock(baseUrl, apiKey, itemId string, ne
 
 func (r *ecommerceRepository) GetAllItemsRaw(baseUrl, apiKey string) ([]byte, error) {
 	return r.client.GetAllItems(baseUrl, apiKey)
+}
+
+func (r *ecommerceRepository) GetAllOrders(baseUrl, apiKey string) ([]byte, error) {
+	return r.client.GetAllOrders(baseUrl, apiKey)
 }
 
 func (r *ecommerceRepository) CreateCustomer(baseUrl, apiKey string, customerData []byte) ([]byte, error) {
