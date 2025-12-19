@@ -200,10 +200,10 @@ func (c *ecommerceClient) GetAllCustomers(baseUrl, apiKey string) ([]byte, error
 	page := 1
 	limit := 100
 
-	fmt.Printf("[GET_ALL_CUSTOMERS] Iniciando obtención de todos los clientes con paginación\n")
+	fmt.Printf("[GET_ALL_CUSTOMERS] Iniciando obtención de todos los clientes con paginación (RoleId=3)\n")
 
 	for {
-		url := fmt.Sprintf("%s/api/customers?Page=%d&Limit=%d", baseUrl, page, limit)
+		url := fmt.Sprintf("%s/api/customers?Page=%d&Limit=%d&RoleId=3", baseUrl, page, limit)
 		fmt.Printf("[GET_ALL_CUSTOMERS] Obteniendo página %d (limit: %d)\n", page, limit)
 
 		req, err := http.NewRequest("GET", url, nil)
@@ -236,7 +236,7 @@ func (c *ecommerceClient) GetAllCustomers(baseUrl, apiKey string) ([]byte, error
 		}
 
 		customersInPage := len(response.Customers)
-		fmt.Printf("[GET_ALL_CUSTOMERS] Página %d: se obtuvieron %d clientes\n", page, customersInPage)
+		fmt.Printf("[GET_ALL_CUSTOMERS] Página %d: se obtuvieron %d clientes (RoleId=3)\n", page, customersInPage)
 
 		if customersInPage == 0 {
 			fmt.Printf("[GET_ALL_CUSTOMERS] No hay más clientes, terminando paginación\n")
