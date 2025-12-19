@@ -18,6 +18,7 @@ type EcommerceRepository interface {
 	GetItemByIDWithDetails(baseUrl, apiKey, itemId string) (*domain.ItemDetails, error)
 	GetItemByIDRaw(baseUrl, apiKey, itemId string) ([]byte, error)
 	GetCustomers(baseUrl, apiKey string) ([]domain.Customer, error)
+	GetAllCustomers(baseUrl, apiKey string) ([]domain.Customer, error)
 	GetCustomerByID(baseUrl, apiKey, id string) (*domain.Customer, error)
 	GetOrderEmails(baseUrl, apiKey string) ([]string, error)
 	GetAllOrders(baseUrl, apiKey string) ([]byte, error)
@@ -341,6 +342,30 @@ func (r *ecommerceRepository) GetCustomers(baseUrl, apiKey string) ([]domain.Cus
 	customers := resp.Customers
 
 	return customers, nil
+}
+
+func (r *ecommerceRepository) GetAllCustomers(baseUrl, apiKey string) ([]domain.Customer, error) {
+	fmt.Printf("[GET_ALL_CUSTOMERS_REPO] Iniciando obtención de todos los clientes (con paginación)\n")
+
+	respBody, err := r.client.GetAllCustomers(baseUrl, apiKey)
+	if err != nil {
+		fmt.Printf("[GET_ALL_CUSTOMERS_REPO] ERROR al obtener todos los clientes: %v\n", err)
+		return nil, err
+	}
+
+	type CustomersResponse struct {
+		Customers []domain.Customer `json:"customers"`
+	}
+
+	var resp CustomersResponse
+	if err := json.Unmarshal(respBody, &resp); err != nil {
+		fmt.Printf("[GET_ALL_CUSTOMERS_REPO] ERROR al decodificar respuesta: %v\n", err)
+		return nil, fmt.Errorf("error decoding response: %w", err)
+	}
+
+	fmt.Printf("[GET_ALL_CUSTOMERS_REPO] Total de clientes decodificados: %d\n", len(resp.Customers))
+
+	return resp.Customers, nil
 }
 
 func (r *ecommerceRepository) GetCustomerByID(baseUrl, apiKey, id string) (*domain.Customer, error) {

@@ -15,6 +15,7 @@ type EcommerceClient interface {
 	GetItems(baseUrl, apiKey string, page, limit int, publishedStatus bool, filters map[string]string) ([]byte, error)
 	GetItemByID(baseUrl, apiKey, itemId string) ([]byte, error)
 	GetCustomers(baseUrl, apiKey string) ([]byte, error)
+	GetAllCustomers(baseUrl, apiKey string) ([]byte, error)
 	GetCustomerByID(baseUrl, apiKey, id string) ([]byte, error)
 	GetOrders(baseUrl, apiKey string) ([]byte, error)
 	GetAllOrders(baseUrl, apiKey string) ([]byte, error)
@@ -192,6 +193,73 @@ func (c *ecommerceClient) GetCustomers(baseUrl, apiKey string) ([]byte, error) {
 	}
 
 	return ioutil.ReadAll(resp.Body)
+}
+
+func (c *ecommerceClient) GetAllCustomers(baseUrl, apiKey string) ([]byte, error) {
+	var allCustomers []map[string]interface{}
+	page := 1
+	limit := 100
+
+	fmt.Printf("[GET_ALL_CUSTOMERS] Iniciando obtención de todos los clientes con paginación\n")
+
+	for {
+		url := fmt.Sprintf("%s/api/customers?Page=%d&Limit=%d", baseUrl, page, limit)
+		fmt.Printf("[GET_ALL_CUSTOMERS] Obteniendo página %d (limit: %d)\n", page, limit)
+
+		req, err := http.NewRequest("GET", url, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create request: %w", err)
+		}
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", apiKey))
+		req.Header.Set("Content-Type", "application/json")
+
+		resp, err := c.httpClient.Do(req)
+		if err != nil {
+			return nil, fmt.Errorf("failed to send request: %w", err)
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			return nil, fmt.Errorf("failed to get customers, status code: %d", resp.StatusCode)
+		}
+
+		bodyBytes, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read response body: %w", err)
+		}
+
+		var response struct {
+			Customers []map[string]interface{} `json:"customers"`
+		}
+		if err := json.Unmarshal(bodyBytes, &response); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal response: %w", err)
+		}
+
+		customersInPage := len(response.Customers)
+		fmt.Printf("[GET_ALL_CUSTOMERS] Página %d: se obtuvieron %d clientes\n", page, customersInPage)
+
+		if customersInPage == 0 {
+			fmt.Printf("[GET_ALL_CUSTOMERS] No hay más clientes, terminando paginación\n")
+			break
+		}
+
+		allCustomers = append(allCustomers, response.Customers...)
+
+		if customersInPage < limit {
+			fmt.Printf("[GET_ALL_CUSTOMERS] Última página alcanzada (clientes < limit)\n")
+			break
+		}
+
+		page++
+	}
+
+	fmt.Printf("[GET_ALL_CUSTOMERS] Total de clientes obtenidos: %d\n", len(allCustomers))
+
+	finalResponse := map[string]interface{}{
+		"customers": allCustomers,
+	}
+
+	return json.Marshal(finalResponse)
 }
 
 func (c *ecommerceClient) GetCustomerByID(baseUrl, apiKey, id string) ([]byte, error) {
