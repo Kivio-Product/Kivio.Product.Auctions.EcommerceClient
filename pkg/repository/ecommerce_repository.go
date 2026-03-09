@@ -353,8 +353,20 @@ func (r *ecommerceRepository) GetAllCustomers(baseUrl, apiKey string) ([]domain.
 		return nil, err
 	}
 
+	type Address struct {
+		PhoneNumber string `json:"phone_number"`
+	}
+
+	type RawCustomer struct {
+		ID             int      `json:"id"`
+		Email          string   `json:"email"`
+		FirstName      string   `json:"first_name"`
+		LastName       string   `json:"last_name"`
+		BillingAddress *Address `json:"billing_address"`
+	}
+
 	type CustomersResponse struct {
-		Customers []domain.Customer `json:"customers"`
+		Customers []RawCustomer `json:"customers"`
 	}
 
 	var resp CustomersResponse
@@ -365,7 +377,21 @@ func (r *ecommerceRepository) GetAllCustomers(baseUrl, apiKey string) ([]domain.
 
 	fmt.Printf("[GET_ALL_CUSTOMERS_REPO] Total de clientes decodificados: %d\n", len(resp.Customers))
 
-	return resp.Customers, nil
+	var customers []domain.Customer
+	for _, raw := range resp.Customers {
+		phone := ""
+		if raw.BillingAddress != nil {
+			phone = raw.BillingAddress.PhoneNumber
+		}
+		customers = append(customers, domain.Customer{
+			ID:    raw.ID,
+			Email: raw.Email,
+			Name:  strings.TrimSpace(raw.FirstName + " " + raw.LastName),
+			Phone: phone,
+		})
+	}
+
+	return customers, nil
 }
 
 func (r *ecommerceRepository) GetCustomerByID(baseUrl, apiKey, id string) (*domain.Customer, error) {
